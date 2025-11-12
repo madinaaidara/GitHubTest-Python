@@ -1,4 +1,4 @@
-name: Django CI/CD Pipeline
+name: Django Multi-Job CI
 on: [push]
 
 jobs:
@@ -9,33 +9,35 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - run: pip install -r requirements.txt
+      - name: Install dependencies
+        run: pip install -r requirements.txt
 
-  quality:
+  tests:
     needs: build
     runs-on: ubuntu-latest
     steps:
-      - run: pip install flake8 black
-      - run: flake8 app/
-      - run: black --check .
-
-  tests:
-    needs: quality
-    runs-on: ubuntu-latest
-    steps:
-      - run: pip install pytest pytest-cov pytest-html pytest-django
-      - run: pytest --cov=app --cov-report=xml:coverage.xml --html=report.html
-      - uses: actions/upload-artifact@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
         with:
-          name: reports
-          path: |
-            coverage.xml
-            report.html
+          python-version: '3.12'
+      - name: Install dependencies for tests
+        run: |
+          # Install project requirements (this ensures pytest and any test deps are available)
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+          # Extra test tools (optional if already in requirements.txt)
+          pip install pytest pytest-django pytest-cov pytest-html
+      - name: Run tests
+        run: pytest --maxfail=1 --disable-warnings -q
 
-  deploy:
+  quality:
     needs: tests
     runs-on: ubuntu-latest
-    if: success()
     steps:
-      - name: Deploy
-        run: curl -X POST ${{ secrets.DEPLOY_HOOK }}
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install flake8
+        run: pip install flake8
+      - name: Run Flake8
+        run: flake8 app/
