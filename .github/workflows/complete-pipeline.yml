@@ -23,7 +23,7 @@ jobs:
     needs: quality
     runs-on: ubuntu-latest
     steps:
-      - run: pip install pytest pytest-cov pytest-html
+      - run: pip install pytest pytest-cov pytest-html pytest-django
       - run: pytest --cov=app --cov-report=xml:coverage.xml --html=report.html
       - uses: actions/upload-artifact@v4
         with:
@@ -37,5 +37,5 @@ jobs:
     runs-on: ubuntu-latest
     if: success()
     steps:
-      - name: Deploy (simulation)
-        run: echo "Déploiement Django réussi 🎉"
+      - name: Deploy
+        run: curl -X POST ${{ secrets.DEPLOY_HOOK }}

@@ -1,0 +1,20 @@
+name: Django CI
+on: [push]
+
+jobs:
+  django-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+          pip install pytest pytest-django pytest-cov
+      - name: Run Django tests
+        env:
+          DJANGO_SETTINGS_MODULE: app.settings
+        run: pytest --cov=app --disable-warnings
