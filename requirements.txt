@@ -1,0 +1,7 @@
+Django
+pytest
+pytest-django
+pytest-cov
+pytest-html
+flake8
+black

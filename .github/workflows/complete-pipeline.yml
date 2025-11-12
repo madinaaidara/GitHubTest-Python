@@ -1,0 +1,41 @@
+name: Django CI/CD Pipeline
+on: [push]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install -r requirements.txt
+
+  quality:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - run: pip install flake8 black
+      - run: flake8 app/
+      - run: black --check .
+
+  tests:
+    needs: quality
+    runs-on: ubuntu-latest
+    steps:
+      - run: pip install pytest pytest-cov pytest-html
+      - run: pytest --cov=app --cov-report=xml:coverage.xml --html=report.html
+      - uses: actions/upload-artifact@v4
+        with:
+          name: reports
+          path: |
+            coverage.xml
+            report.html
+
+  deploy:
+    needs: tests
+    runs-on: ubuntu-latest
+    if: success()
+    steps:
+      - name: Deploy (simulation)
+        run: echo "Déploiement Django réussi 🎉"
